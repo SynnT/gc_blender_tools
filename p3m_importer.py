@@ -58,7 +58,7 @@ def import_p3m(context, filepath):
 
     bpy.ops.object.mode_set(mode='EDIT')
 
-    positions = [None] * bone_angle_count
+    angle_pos_map = [None] * bone_angle_count
 
     for x in range(bone_position_count):
         data = file_object.read(3 * 4)
@@ -70,46 +70,46 @@ def import_p3m(context, filepath):
         position_z = position_z / AUTO_SIZE_SCALE
 
         # DEBUG
-        print("x: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
+        print("\tx: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
         
+        joint = armature.edit_bones.new("position_%d" % x)
+        joint.head = mathutils.Vector((0, 0, 0))
+        joint.tail = mathutils.Vector((position_x, position_y, position_z))
+
         for _ in range(10):
             data = file_object.read(1)
-            child_index, = struct.unpack('<1B', data)
+            angle_index, = struct.unpack('<1B', data)
 
-
-            if child_index != 255:
+            if angle_index != 255:
                 # DEBUG
-                print("\t-> bone_%d" % (child_index))      
-                positions[child_index] = mathutils.Vector((position_x, position_y, position_z))
+                print("\t-> angle_%d" % (angle_index))
+
+                angle_pos_map[angle_index] = x
 
         file_object.read(2) # ignores the padding
-        
-
-    for x in range(len(positions)):
-        joint = armature.edit_bones.new("bone_%d" % x)
-        joint.head = mathutils.Vector((0, 0, 0))
-        joint.tail = positions[x]
 
     for x in range(bone_angle_count):
         file_object.read(4 * 4)
         
         for _ in range(10):
             data = file_object.read(1)
-            child_index, = struct.unpack('<1B', data)
+            position_index, = struct.unpack('<1B', data)
 
-            if child_index != 255 and child_index != x:
+            if position_index != 255:
                 # DEBUG
-                print("bone_%d -> bone_%d" % (x, child_index))
+                print("angle_%d -> position_%d" % (x, position_index))
+                
+                if angle_pos_map[x] != None:
+                    parent = armature.edit_bones[angle_pos_map[x]]
+                    child = armature.edit_bones[position_index]
 
-                # TEST
-                parent = armature.edit_bones[x]
-                child = armature.edit_bones[child_index]
-
-                child.parent = parent
-                child.head = parent.tail                
-                child.tail = child.tail + parent.tail
+                    child.parent = parent
+                    child.head = parent.tail                
+                    child.tail = child.tail + parent.tail
 
         file_object.read(2) # ignores the padding
+
+                
 
     # fixes orientation
     armature.transform(mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
