@@ -51,7 +51,7 @@ def import_p3m(context, filepath):
 
     # TEST
     armature = bpy.data.armatures.new('Armature')
-    armature_object = bpy.data.objects.new('Armature_object', armature)
+    armature_object = bpy.data.objects.new("%s_armature" % model_name, armature)
 
     bpy.context.collection.objects.link(armature_object)
     context.view_layer.objects.active = armature_object
