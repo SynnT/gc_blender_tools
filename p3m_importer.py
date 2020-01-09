@@ -13,7 +13,7 @@
 
 bl_info = {
     "name": "Perfect 3D Model (.p3m) Importer",
-    "author": "Gabriel F. (Frihet Dev)",
+    "author": "Gabriel F. (Synn)",
     "description": "Imports .p3m files into Blender, including meshes and bones.",
     "blender": (2, 80, 0),
     "version": (0, 0, 1),
