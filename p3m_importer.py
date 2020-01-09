@@ -30,8 +30,6 @@ import struct
 
 
 def import_p3m(context, filepath):
-    AUTO_SIZE_SCALE = 0.0045767944 * 1.1
-
     model_name = bpy.path.basename(filepath)
 
     print("Importing", model_name)
@@ -65,15 +63,17 @@ def import_p3m(context, filepath):
         position_x, position_y, position_z = struct.unpack('<3f', data)
 
         # scales the vectors back
-        position_x = position_x / AUTO_SIZE_SCALE
-        position_y = position_y / AUTO_SIZE_SCALE
-        position_z = position_z / AUTO_SIZE_SCALE
+        position_x = position_x
+        position_y = position_y
+        position_z = position_z
 
         # DEBUG
+        print("position_%d:" % x)
         print("\tx: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
         
         joint = armature.edit_bones.new("bone_%d" % x)
-        joint.head = mathutils.Vector((0, 0, 0))
+        joint.use_connect = True
+        joint.head = mathutils.Vector((position_x, position_y, position_z))
         joint.tail = mathutils.Vector((position_x, position_y, position_z))
 
         for _ in range(10):
