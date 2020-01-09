@@ -72,7 +72,7 @@ def import_p3m(context, filepath):
         # DEBUG
         print("\tx: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
         
-        joint = armature.edit_bones.new("position_%d" % x)
+        joint = armature.edit_bones.new("bone_%d" % x)
         joint.head = mathutils.Vector((0, 0, 0))
         joint.tail = mathutils.Vector((position_x, position_y, position_z))
 
@@ -108,8 +108,6 @@ def import_p3m(context, filepath):
                     child.tail = child.tail + parent.tail
 
         file_object.read(2) # ignores the padding
-
-                
 
     # fixes orientation
     armature.transform(mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
