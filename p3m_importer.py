@@ -58,6 +58,8 @@ def import_p3m(context, filepath):
 
     bpy.ops.object.mode_set(mode='EDIT')
 
+    positions = [None] * bone_angle_count
+
     for x in range(bone_position_count):
         data = file_object.read(3 * 4)
         position_x, position_y, position_z = struct.unpack('<3f', data)
@@ -68,23 +70,25 @@ def import_p3m(context, filepath):
         position_z = position_z / AUTO_SIZE_SCALE
 
         # DEBUG
-        print("bone_%d:" % (x))
-        print("\tx: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
+        print("x: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
         
         for _ in range(10):
             data = file_object.read(1)
             child_index, = struct.unpack('<1B', data)
 
+
             if child_index != 255:
                 # DEBUG
                 print("\t-> bone_%d" % (child_index))      
+                positions[child_index] = mathutils.Vector((position_x, position_y, position_z))
 
         file_object.read(2) # ignores the padding
+        
 
-        # TEST
+    for x in range(len(positions)):
         joint = armature.edit_bones.new("bone_%d" % x)
         joint.head = mathutils.Vector((0, 0, 0))
-        joint.tail = mathutils.Vector((position_x, position_y, position_z))
+        joint.tail = positions[x]
 
     for x in range(bone_angle_count):
         file_object.read(4 * 4)
