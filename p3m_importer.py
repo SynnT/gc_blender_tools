@@ -35,11 +35,6 @@ from bpy.types import Operator
 # invoke() function which calls the file selector.
 from bpy_extras.io_utils import ImportHelper
 
-correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
-                                        [0.0, 0.0, 1.0, 0.0],
-                                        [0.0, 1.0, 0.0, 0.0],
-                                        [0.0, 0.0, 0.0, 1.0]])
-
 
 def import_p3m(context, filepath):
     model_name = bpy.path.basename(filepath)
@@ -57,10 +52,6 @@ def import_p3m(context, filepath):
     data = file_object.read(2)
     bone_position_count, bone_angle_count = struct.unpack('<2B', data)
 
-    # DEBUG
-    print("bone_position_count:", bone_position_count)
-    print("bone_angle_count:", bone_angle_count)
-
     armature = bpy.data.armatures.new('Armature')
     armature_object = bpy.data.objects.new("%s_armature" % model_name, armature)
 
@@ -76,10 +67,6 @@ def import_p3m(context, filepath):
         data = file_object.read(3 * 4)
         px, py, pz = struct.unpack('<3f', data)
 
-        # DEBUG
-        print("position_%d:" % x)
-        print("\tx: %f\ty: %f\tz: %f" % (px, py, pz))
-
         children_angles = []
 
         for _ in range(10):
@@ -87,9 +74,6 @@ def import_p3m(context, filepath):
             angle_index, = struct.unpack('<1B', data)
 
             if angle_index != 255:
-                # DEBUG
-                print("\t-> angle_%d" % (angle_index))
-
                 children_angles.append(angle_index)
                 angle_to_pos[angle_index] = (px, py, pz)
 
@@ -113,9 +97,6 @@ def import_p3m(context, filepath):
             position_index, = struct.unpack('<1B', data)
 
             if position_index != 255:
-                # DEBUG
-                print("angle_%d -> position_%d" % (x, position_index))
-
                 children_positions.append(position_index)
 
         bone_angles[x] = children_positions
@@ -127,7 +108,6 @@ def import_p3m(context, filepath):
 
         for pos in bone_angles[x]:
             for ang in bone_positions[pos][1]:
-                print("angle_%d" % ang)
                 children_indexes.append(ang)
 
         if len(children_indexes) == 0:
@@ -165,10 +145,6 @@ def import_p3m(context, filepath):
 
     data = file_object.read(4)
     vertex_count, face_count = struct.unpack('<2H', data)
-
-    # DEBUG
-    print("vertex_count:", vertex_count)
-    print("face_count:", face_count)
 
     file_object.read(260) # ignores the texture_filename
 
@@ -249,7 +225,13 @@ def import_p3m(context, filepath):
             
             mesh_object.vertex_groups[index].add([i], weight, "REPLACE")
 
-    # fixes orientation
+    
+    # corrects orientation
+    correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
+                                            [0.0, 0.0, 1.0, 0.0],
+                                            [0.0, 1.0, 0.0, 0.0],
+                                            [0.0, 0.0, 0.0, 1.0]])
+
     armature.transform(correct_orientation)
     mesh.transform(correct_orientation)
 
