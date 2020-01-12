@@ -40,10 +40,13 @@ To install the add-on, first make sure that you have a 2.8 (or newer) [Blender i
 </p>
 
 ## Important Notes
+If you fiddle with the plugin for a bit, you will notice that each mesh has its own armature. The issue with that is that when you move one skeleton, the other skeletons stay the same, which is a big issue when animating characters (they have multiple meshes). See:
 
 <p align="center">
   <img src="./img/gif5.gif">
 </p>
+
+To solve this, all you have to do is to select all the meshes and join them. Now, all of them share a single skeleton and you don't have to worry about this anymore.
 
 <p align="center">
   <img src="./img/gif6.gif">
