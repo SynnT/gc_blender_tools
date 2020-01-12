@@ -7,14 +7,47 @@ Here are some key features of this add-on.
 ### Multi-file support
 You can import multiple model files at once and save some precious time.
 
+<p align="center">
+  <img src="./img/gif1.gif">
+</p>
+
 ### Mesh
 Of course, the add-on imports the mesh of any P3M model.
+
+<p align="center">
+  <img src="./img/gif2.gif">
+</p>
 
 ### Skeleton and Skinning
 The add-on also imports all of the bones and skinning data, so that you can start animating your models immediately.
 
+<p align="center">
+  <img src="./img/gif3.gif">
+</p>
+
 ### Texture Mapping
 The add-on also imports all the data regarding UV texture mapping.
+
+<p align="center">
+  <img src="./img/gif4.gif">
+</p>
+
+## Installation
+To install the add-on, first make sure that you have a 2.8 (or newer) [Blender installation](https://www.blender.org/download/) on your computer. After that, all you have to do is to download this repository and install the `p3m_importer.py` through Edit > Preferences > Add-ons > Install. Then, you can normally import P3M files through File > Import.
+
+<p align="center">
+  <img src="./img/gif7.gif">
+</p>
+
+## Important Notes
+
+<p align="center">
+  <img src="./img/gif5.gif">
+</p>
+
+<p align="center">
+  <img src="./img/gif6.gif">
+</p>
 
 ----
 ## **The P3M Format**
