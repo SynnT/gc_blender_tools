@@ -16,7 +16,7 @@ bl_info = {
     "author": "Gabriel F. (Synn)",
     "description": "Imports .p3m files into Blender, including meshes and bones.",
     "blender": (2, 80, 0),
-    "version": (0, 0, 1),
+    "version": (1, 0, 0),
     "location": "File > Import > Perfect 3D Model (.p3m)",
     "warning": "",
     "category": "Import-Export"
