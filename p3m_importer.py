@@ -127,7 +127,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
 
-class ImportSomeData(Operator, ImportHelper):
+class ImportFile(Operator, ImportHelper):
     """Import a P3M file"""
     bl_idname = "import_model.p3m"
     bl_label = "Import P3M"
@@ -147,16 +147,16 @@ class ImportSomeData(Operator, ImportHelper):
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
-    self.layout.operator(ImportSomeData.bl_idname, text="Perfect 3D Model (.p3m)")
+    self.layout.operator(ImportFile.bl_idname, text="Perfect 3D Model (.p3m)")
 
 
 def register():
-    bpy.utils.register_class(ImportSomeData)
+    bpy.utils.register_class(ImportFile)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
 def unregister():
-    bpy.utils.unregister_class(ImportSomeData)
+    bpy.utils.unregister_class(ImportFile)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
 
