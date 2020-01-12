@@ -1,7 +1,26 @@
 # P3M Tools
-A Blender add-on to import Perfect 3D Model (.p3m) files
+This is an add-on for importing Perfect 3D Model (.p3m) files into [Blender](https://www.blender.org/) version 2.8+.
+
+## **Features**
+Here are some key features of this add-on.
+
+### Multi-file support
+You can import multiple model files at once and save some precious time.
+
+### Mesh
+Of course, the add-on imports the mesh of any P3M model.
+
+### Bones and Skinning
+The add-on also imports all of the bones and skinning data, so that you can start animating your models immediately.
+
+### Texture Mapping
+The add-on also imports all the data regarding UV texture mapping.
 
 ----
+## **The P3M Format**
+
+The Perfect 3D Model file format (.p3m) is a file format that stores Grand Chase _model_ data, such as **meshes** (vertexes and faces), **bones** and **skinning information**. Below, there's a pseudo C code that illustrates well what is the P3M format. 
+
 ```cpp
 #define INVALID_BONE_INDEX 255 // or 0xFF
 
@@ -53,8 +72,8 @@ struct p3m_file {
     angle_bone_t bone_angles[bone_angle_count];
 
     // Mesh information
-    unsigned char vertex_count;
-    unsigned char face_count;
+    unsigned short vertex_count;
+    unsigned short face_count;
 
     char texture_filename[260];
 
@@ -63,8 +82,4 @@ struct p3m_file {
 
     // gibblerish data?
 };
-```
-
-```cpp
-bool GCDeviceMeshP3M::Load();
 ```

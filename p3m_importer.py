@@ -29,10 +29,9 @@ import struct
 import bmesh
 import bpy
 import mathutils
-from bpy.props import BoolProperty, EnumProperty, StringProperty, CollectionProperty
+from bpy.props import (BoolProperty, CollectionProperty, EnumProperty,
+                       StringProperty)
 from bpy.types import Operator, OperatorFileListElement
-# ImportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
 from bpy_extras.io_utils import ImportHelper
 
 
@@ -250,13 +249,12 @@ class ImportFile(Operator, ImportHelper):
     bl_idname = "import_model.p3m"
     bl_label = "Import P3M"
 
-    # ImportHelper mixin class uses this
     filename_ext = ".p3m"
 
     filter_glob: StringProperty(
         default="*.p3m",
         options={'HIDDEN'},
-        maxlen=255,  # Max internal buffer length, longer would be clamped.
+        maxlen=255,
     )
 
     files: CollectionProperty(
@@ -274,7 +272,6 @@ class ImportFile(Operator, ImportHelper):
         return {'FINISHED'}
 
 
-# Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
     self.layout.operator(ImportFile.bl_idname, text="Perfect 3D Model (.p3m)")
 
@@ -291,6 +288,4 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
-    # test call
     bpy.ops.import_model.p3m('INVOKE_DEFAULT')
