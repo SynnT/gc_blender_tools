@@ -28,6 +28,11 @@ import os
 import mathutils
 import struct
 
+correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
+                                        [0.0, 0.0, 1.0, 0.0],
+                                        [0.0, 1.0, 0.0, 0.0],
+                                        [0.0, 0.0, 0.0, 1.0]])
+
 
 def import_p3m(context, filepath):
     model_name = bpy.path.basename(filepath)
@@ -110,10 +115,7 @@ def import_p3m(context, filepath):
         file_object.read(2) # ignores the padding
 
     # fixes orientation
-    armature.transform(mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
-                                          [0.0, 0.0, 1.0, 0.0],
-                                          [0.0, 1.0, 0.0, 0.0],
-                                          [0.0, 0.0, 0.0, 1.0]]))
+    armature.transform(correct_orientation)
 
     return {'FINISHED'}
 
