@@ -154,10 +154,11 @@ def import_p3m(context, filepath):
 
         if index != 255:
             index = index - bone_position_count
+            
             px += armature.edit_bones[index].tail[0]
             py += armature.edit_bones[index].tail[1]
             pz += armature.edit_bones[index].tail[2]
-        
+
         tv = 1 - tv
 
         # DEBUG
@@ -205,12 +206,13 @@ def import_p3m(context, filepath):
     for x in range(bone_position_count):
         mesh_object.vertex_groups.new(name="bone_%d" % x)
 
-    for vertex in vertices:
+    for i, vertex in enumerate(vertices):
         if index != 255:
             index = vertex[0]
             weight = vertex[1]
-
-            mesh_object.vertex_groups[index].add([index], weight, "REPLACE")
+            
+            # change later
+            mesh_object.vertex_groups[index].add([i], weight, "REPLACE")
 
     # fixes orientation
     armature.transform(correct_orientation)
