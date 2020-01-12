@@ -23,10 +23,17 @@ bl_info = {
 }
 
 
-import bpy
 import os
-import mathutils
 import struct
+
+import bmesh
+import bpy
+import mathutils
+from bpy.props import BoolProperty, EnumProperty, StringProperty
+from bpy.types import Operator
+# ImportHelper is a helper class, defines filename and
+# invoke() function which calls the file selector.
+from bpy_extras.io_utils import ImportHelper
 
 correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
                                         [0.0, 0.0, 1.0, 0.0],
@@ -45,6 +52,8 @@ def import_p3m(context, filepath):
 
     file_object.read(27) # skips the version
 
+    print("Reading bones...")
+
     data = file_object.read(2)
     bone_position_count, bone_angle_count = struct.unpack('<2B', data)
 
@@ -52,7 +61,6 @@ def import_p3m(context, filepath):
     print("bone_position_count:", bone_position_count)
     print("bone_angle_count:", bone_angle_count)
 
-    # TEST
     armature = bpy.data.armatures.new('Armature')
     armature_object = bpy.data.objects.new("%s_armature" % model_name, armature)
 
@@ -65,21 +73,16 @@ def import_p3m(context, filepath):
 
     for x in range(bone_position_count):
         data = file_object.read(3 * 4)
-        position_x, position_y, position_z = struct.unpack('<3f', data)
-
-        # scales the vectors back
-        position_x = position_x
-        position_y = position_y
-        position_z = position_z
+        px, py, pz = struct.unpack('<3f', data)
 
         # DEBUG
         print("position_%d:" % x)
-        print("\tx: %f\ty: %f\tz: %f" % (position_x, position_y, position_z))
+        print("\tx: %f\ty: %f\tz: %f" % (px, py, pz))
         
         joint = armature.edit_bones.new("bone_%d" % x)
         joint.use_connect = True
-        joint.head = mathutils.Vector((position_x, position_y, position_z))
-        joint.tail = mathutils.Vector((position_x, position_y, position_z))
+        joint.head = mathutils.Vector((px, py, pz))
+        joint.tail = mathutils.Vector((px, py, pz))
 
         for _ in range(10):
             data = file_object.read(1)
@@ -114,18 +117,112 @@ def import_p3m(context, filepath):
 
         file_object.read(2) # ignores the padding
 
+    print("Reading mesh...")
+
+    data = file_object.read(4)
+    vertex_count, face_count = struct.unpack('<2H', data)
+
+    # DEBUG
+    print("vertex_count:", vertex_count)
+    print("face_count:", face_count)
+
+    file_object.read(260) # ignores the texture_filename
+
+    print("Reading faces...")
+
+    faces = []
+
+    for x in range(face_count):
+        data = file_object.read(3 * 2)
+        a, b, c = struct.unpack('<3H', data)
+
+        # DEBUG
+        print("face_%d: (%d, %d, %d)" % (x, a, b, c))
+
+        faces.append((a, b, c))
+
+    print("Reading vertices...")
+
+    bm = bmesh.new()
+    mesh = bpy.data.meshes.new("%s_mesh" % model_name)
+
+    vertices = []
+
+    for x in range(vertex_count):
+        data = file_object.read(40)
+        px, py, pz, weight, index, nx, ny, nz, tu, tv = struct.unpack('<3f1f1B3x3f2f', data)
+
+        if index != 255:
+            index = index - bone_position_count
+        tv = 1 - tv
+
+        # DEBUG
+        print("vertex_%d:" % x)
+        print("\tposition: (%f, %f, %f)" % (px, py, pz))
+        print("\tweight: %f" % weight)
+        print("\tindex: %d" % index)
+        print("\tnormal: (%f, %f, %f)" % (nx, ny, nz))
+        print("\tuv: (%f, %f)" % (tu, tv))
+
+        vertex = bm.verts.new((px, py, pz))
+
+        vertex.normal = mathutils.Vector((nx, ny, nz))
+        vertex.normal_update()
+
+        vertices.append((index, weight, tu, tv))
+
+    bm.verts.ensure_lookup_table()
+    bm.verts.index_update()
+    
+    print("Setting UV coordinates...")
+
+    uv_layer = bm.loops.layers.uv.verify()
+
+    for f in faces:
+        a = bm.verts[f[0]]
+        b = bm.verts[f[1]]
+        c = bm.verts[f[2]]
+
+        face = bm.faces.new((a, b, c))
+
+        for vert, loop in zip(face.verts, face.loops):
+            tu = vertices[vert.index][2]
+            tv = vertices[vert.index][3]
+
+            loop[uv_layer].uv = (tu, tv)
+
+    bm.to_mesh(mesh)
+    bm.free()
+
+    mesh_object = bpy.data.objects.new("%s_mesh" % model_name, mesh)
+
+    print("Setting vertex weights...")
+
+    for x in range(bone_position_count):
+        mesh_object.vertex_groups.new(name="bone_%d" % x)
+
+    for vertex in vertices:
+        if index != 255:
+            index = vertex[0]
+            weight = vertex[1]
+
+            mesh_object.vertex_groups[index].add([index], weight, "REPLACE")
+
     # fixes orientation
     armature.transform(correct_orientation)
+    mesh.transform(correct_orientation)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    mesh_object.parent = armature_object
+    modifier = mesh_object.modifiers.new(type='ARMATURE', name="Armature")
+    modifier.object = armature_object
+
+    bpy.context.collection.objects.link(mesh_object)
+    context.view_layer.objects.active = mesh_object
+            
 
     return {'FINISHED'}
-
-
-# ImportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
-
 
 class ImportFile(Operator, ImportHelper):
     """Import a P3M file"""
