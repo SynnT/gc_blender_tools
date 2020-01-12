@@ -40,7 +40,7 @@ To install the add-on, first make sure that you have a 2.8 (or newer) [Blender i
 </p>
 
 ## Important Notes
-If you fiddle with the plugin for a bit, you will notice that each mesh has its own armature. The issue with that is that when you move one skeleton, the other skeletons stay the same, which is a big issue when animating characters (they have multiple meshes). See:
+If you fiddle with the add-on for a bit, you will notice that each mesh has its own armature. The issue with that is that when you move one skeleton, the other skeletons stay the same, which is a big issue when animating characters (they have multiple meshes). See:
 
 <p align="center">
   <img src="./img/gif5.gif">
