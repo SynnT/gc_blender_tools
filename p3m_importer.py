@@ -180,8 +180,7 @@ def import_p3m(context, filepath):
         data = file_object.read(3 * 2)
         a, b, c = struct.unpack('<3H', data)
 
-        if not (a, b, c) in faces:
-            faces.append((a, b, c))
+        faces.append((a, b, c))
 
     print("Reading vertices...")
 
