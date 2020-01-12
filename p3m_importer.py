@@ -69,7 +69,8 @@ def import_p3m(context, filepath):
 
     bpy.ops.object.mode_set(mode='EDIT')
 
-    angle_pos_map = [None] * bone_angle_count
+    bone_positions = [None] * bone_position_count
+    angle_to_pos = [None] * bone_angle_count
 
     for x in range(bone_position_count):
         data = file_object.read(3 * 4)
@@ -78,11 +79,8 @@ def import_p3m(context, filepath):
         # DEBUG
         print("position_%d:" % x)
         print("\tx: %f\ty: %f\tz: %f" % (px, py, pz))
-        
-        joint = armature.edit_bones.new("bone_%d" % x)
-        joint.use_connect = True
-        joint.head = mathutils.Vector((px, py, pz))
-        joint.tail = mathutils.Vector((px, py, pz))
+
+        children_angles = []
 
         for _ in range(10):
             data = file_object.read(1)
@@ -92,12 +90,23 @@ def import_p3m(context, filepath):
                 # DEBUG
                 print("\t-> angle_%d" % (angle_index))
 
-                angle_pos_map[angle_index] = x
+                children_angles.append(angle_index)
+                angle_to_pos[angle_index] = (px, py, pz)
+
+        bone_positions[x] = ((px, py, pz), children_angles)
 
         file_object.read(2) # ignores the padding
 
+    bone_angles = [None] * bone_angle_count 
+
     for x in range(bone_angle_count):
         file_object.read(4 * 4)
+
+        joint = armature.edit_bones.new("bone_%d" % x)
+        joint.head = mathutils.Vector(angle_to_pos[x])
+        joint.tail = mathutils.Vector(angle_to_pos[x])
+
+        children_positions = []
         
         for _ in range(10):
             data = file_object.read(1)
@@ -106,16 +115,51 @@ def import_p3m(context, filepath):
             if position_index != 255:
                 # DEBUG
                 print("angle_%d -> position_%d" % (x, position_index))
-                
-                if angle_pos_map[x] != None:
-                    parent = armature.edit_bones[angle_pos_map[x]]
-                    child = armature.edit_bones[position_index]
 
-                    child.parent = parent
-                    child.head = parent.tail                
-                    child.tail = child.tail + parent.tail
+                children_positions.append(position_index)
+
+        bone_angles[x] = children_positions
 
         file_object.read(2) # ignores the padding
+
+    for x in range(bone_angle_count):
+        children_indexes = []
+
+        for pos in bone_angles[x]:
+            for ang in bone_positions[pos][1]:
+                print("angle_%d" % ang)
+                children_indexes.append(ang)
+
+        if len(children_indexes) == 0:
+            current = armature.edit_bones[x]
+            parent = current.parent
+
+            v = (parent.tail - parent.head).normalized() * 0.05
+
+            current.tail = current.head + v
+
+        elif len(children_indexes) == 1:
+            parent = armature.edit_bones[x]
+            child = armature.edit_bones[children_indexes[0]]
+
+            child.parent = parent
+            child.head = parent.head + child.head
+            parent.tail = child.head
+
+        else:
+            parent = armature.edit_bones[x]
+
+            new_tail = mathutils.Vector((0, 0, 0))
+            
+            for idx in children_indexes:
+                child = armature.edit_bones[idx]
+
+                child.parent = parent
+                child.head = parent.head + child.head
+
+                new_tail = new_tail + child.head
+
+            parent.tail = new_tail.normalized() * 0.05
 
     print("Reading mesh...")
 
@@ -136,10 +180,8 @@ def import_p3m(context, filepath):
         data = file_object.read(3 * 2)
         a, b, c = struct.unpack('<3H', data)
 
-        # DEBUG
-        print("face_%d: (%d, %d, %d)" % (x, a, b, c))
-
-        faces.append((a, b, c))
+        if not (a, b, c) in faces:
+            faces.append((a, b, c))
 
     print("Reading vertices...")
 
@@ -155,20 +197,11 @@ def import_p3m(context, filepath):
         if index != 255:
             index = index - bone_position_count
             
-            # CHANGE: it's actually the head, and the bones are wrong...
-            px += armature.edit_bones[index].tail[0]
-            py += armature.edit_bones[index].tail[1]
-            pz += armature.edit_bones[index].tail[2]
+            px += armature.edit_bones[index].head[0]
+            py += armature.edit_bones[index].head[1]
+            pz += armature.edit_bones[index].head[2]
 
         tv = 1 - tv
-
-        # DEBUG
-        print("vertex_%d:" % x)
-        print("\tposition: (%f, %f, %f)" % (px, py, pz))
-        print("\tweight: %f" % weight)
-        print("\tindex: %d" % index)
-        print("\tnormal: (%f, %f, %f)" % (nx, ny, nz))
-        print("\tuv: (%f, %f)" % (tu, tv))
 
         vertex = bm.verts.new((px, py, pz))
 
@@ -204,7 +237,7 @@ def import_p3m(context, filepath):
 
     print("Setting vertex weights...")
 
-    for x in range(bone_position_count):
+    for x in range(bone_angle_count):
         mesh_object.vertex_groups.new(name="bone_%d" % x)
 
     for i, vertex in enumerate(vertices):
