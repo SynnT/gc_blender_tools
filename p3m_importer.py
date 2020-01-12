@@ -29,8 +29,8 @@ import struct
 import bmesh
 import bpy
 import mathutils
-from bpy.props import BoolProperty, EnumProperty, StringProperty
-from bpy.types import Operator
+from bpy.props import BoolProperty, EnumProperty, StringProperty, CollectionProperty
+from bpy.types import Operator, OperatorFileListElement
 # ImportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy_extras.io_utils import ImportHelper
@@ -39,7 +39,7 @@ from bpy_extras.io_utils import ImportHelper
 def import_p3m(context, filepath):
     model_name = bpy.path.basename(filepath)
 
-    print("Importing", model_name)
+    print("[Importing %s]" % model_name)
 
     model_name = os.path.splitext(model_name)[0]
 
@@ -243,9 +243,7 @@ def import_p3m(context, filepath):
 
     bpy.context.collection.objects.link(mesh_object)
     context.view_layer.objects.active = mesh_object
-            
 
-    return {'FINISHED'}
 
 class ImportFile(Operator, ImportHelper):
     """Import a P3M file"""
@@ -261,8 +259,19 @@ class ImportFile(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    files: CollectionProperty(
+        name="P3M files",
+        type=OperatorFileListElement,
+    )
+
+    directory = StringProperty(subtype='DIR_PATH')
+
     def execute(self, context):
-        return import_p3m(context, self.filepath)
+        for file in self.files:
+            path = os.path.join(self.directory, file.name)
+            import_p3m(context, path)
+
+        return {'FINISHED'}
 
 
 # Only needed if you want to add into a dynamic menu
