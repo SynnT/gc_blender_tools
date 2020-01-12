@@ -155,6 +155,7 @@ def import_p3m(context, filepath):
         if index != 255:
             index = index - bone_position_count
             
+            # CHANGE: it's actually the head, and the bones are wrong...
             px += armature.edit_bones[index].tail[0]
             py += armature.edit_bones[index].tail[1]
             pz += armature.edit_bones[index].tail[2]
@@ -211,7 +212,6 @@ def import_p3m(context, filepath):
             index = vertex[0]
             weight = vertex[1]
             
-            # change later
             mesh_object.vertex_groups[index].add([i], weight, "REPLACE")
 
     # fixes orientation
