@@ -222,7 +222,10 @@ def import_p3m(context, filepath):
         b = bm.verts[f[1]]
         c = bm.verts[f[2]]
 
-        face = bm.faces.new((a, b, c))
+        try:
+            face = bm.faces.new((a, b, c))
+        except:
+            pass
 
         for vert, loop in zip(face.verts, face.loops):
             tu = vertices[vert.index][2]
