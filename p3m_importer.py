@@ -109,36 +109,26 @@ def import_p3m(context, filepath):
             for ang in bone_positions[pos][1]:
                 children_indexes.append(ang)
 
-        if len(children_indexes) == 0:
+        if len(children_indexes) != 1:
             current = armature.edit_bones[x]
             parent = current.parent
 
-            v = (parent.tail - parent.head).normalized() * 0.05
+            if parent != None:
+                v = (parent.tail - parent.head).normalized() * 0.05
+            else:
+                v = mathutils.Vector((0, 0.05, 0))
 
-            current.tail = current.head + v
+            current.tail = current.head + v    
+                   
+        for idx in children_indexes:
+            current = armature.edit_bones[x]
+            child = armature.edit_bones[idx]
 
-        elif len(children_indexes) == 1:
-            parent = armature.edit_bones[x]
-            child = armature.edit_bones[children_indexes[0]]
+            child.parent = current
+            child.head = child.parent.head + child.head
 
-            child.parent = parent
-            child.head = parent.head + child.head
-            parent.tail = child.head
-
-        else:
-            parent = armature.edit_bones[x]
-
-            new_tail = mathutils.Vector((0, 0, 0))
-            
-            for idx in children_indexes:
-                child = armature.edit_bones[idx]
-
-                child.parent = parent
-                child.head = parent.head + child.head
-
-                new_tail = new_tail + child.head
-
-            parent.tail = new_tail.normalized() * 0.05
+            if len(children_indexes) == 1:
+                current.tail = child.head
 
     print("Reading mesh...")
 
