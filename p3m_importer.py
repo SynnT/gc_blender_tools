@@ -278,7 +278,7 @@ class ImportFile(Operator, ImportHelper):
 
     hide_unused_bones: BoolProperty(
         name="Hide unused bones",
-        description="Hides all the bones that do not influence the mesh. They will still be accessible through the object hierarchy panel and can be selected with the Select Box Tool in the pose mode.",
+        description="Hides all the bones that do not influence the mesh. They will still be accessible through the object hierarchy panel and can be selected with the Select Box Tool in the pose mode",
         default=False,
     )
 
