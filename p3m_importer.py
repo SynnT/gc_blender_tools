@@ -16,7 +16,7 @@ bl_info = {
     "author": "Gabriel F. (Synn)",
     "description": "Imports .p3m files into Blender, including meshes and bones.",
     "blender": (2, 80, 0),
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "location": "File > Import > Perfect 3D Model (.p3m)",
     "warning": "",
     "category": "Import-Export"
@@ -35,7 +35,7 @@ from bpy.types import Operator, OperatorFileListElement
 from bpy_extras.io_utils import ImportHelper
 
 
-def import_p3m(context, filepath):
+def import_p3m(context, filepath, hide_unused_bones):
     model_name = bpy.path.basename(filepath)
 
     print("[Importing %s]" % model_name)
@@ -214,29 +214,30 @@ def import_p3m(context, filepath):
             
             mesh_object.vertex_groups[index].add([i], weight, "REPLACE")
 
-    print("Hiding unused bones...")
+    if hide_unused_bones:
+        print("Hiding unused bones...")
 
-    for bone in armature.edit_bones:
-        if not bone.children:
-            for b in [bone, *bone.parent_recursive]:
-                bone_group = int(b.name.split('_')[-1])
+        for bone in armature.edit_bones:
+            if not bone.children:
+                for b in [bone, *bone.parent_recursive]:
+                    bone_group = int(b.name.split('_')[-1])
 
-                # if all the bone's children are hidden and there are no vertices influenced by the bone
-                if not False in [c.hide for c in b.children] and not any([v for v in mesh.vertices if bone_group in [g.group for g in v.groups]]):
-                    b.hide = True
-                else:
-                    break
+                    # if all the bone's children are hidden and there are no vertices influenced by the bone
+                    if not False in [c.hide for c in b.children] and not any([v for v in mesh.vertices if bone_group in [g.group for g in v.groups]]):
+                        b.hide = True
+                    else:
+                        break
 
-    for x in range(len(armature.edit_bones)):
-        bone = armature.edit_bones[x]
-        print(bone.name)
+        for x in range(len(armature.edit_bones)):
+            bone = armature.edit_bones[x]
+            print(bone.name)
 
-        if bone.hide:
-            bone.select = True
-            
-            bpy.ops.object.mode_set(mode='POSE')
-            bpy.ops.pose.hide()
-            bpy.ops.object.mode_set(mode='EDIT')
+            if bone.hide:
+                bone.select = True
+                
+                bpy.ops.object.mode_set(mode='POSE')
+                bpy.ops.pose.hide()
+                bpy.ops.object.mode_set(mode='EDIT')
 
     # corrects orientation
     correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
@@ -275,12 +276,18 @@ class ImportFile(Operator, ImportHelper):
         type=OperatorFileListElement,
     )
 
+    hide_unused_bones: BoolProperty(
+        name="Hide unused bones",
+        description="Hides all the bones that do not influence the mesh. They will still be accessible through the object hierarchy panel and can be selected with the Select Box Tool in the pose mode.",
+        default=False,
+    )
+
     directory = StringProperty(subtype='DIR_PATH')
 
     def execute(self, context):
         for file in self.files:
             path = os.path.join(self.directory, file.name)
-            import_p3m(context, path)
+            import_p3m(context, path, self.hide_unused_bones)
 
         return {'FINISHED'}
 
