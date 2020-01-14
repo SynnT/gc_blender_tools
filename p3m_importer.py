@@ -218,12 +218,13 @@ def import_p3m(context, filepath):
 
     for group in mesh_object.vertex_groups:
         if not any([v for v in mesh.vertices if group.index in [g.group for g in v.groups]]):
-            armature.edit_bones[group.index].hide = True
-            armature.edit_bones[group.index].select = True
+            if len(armature.edit_bones[group.index].children) == 0:
+                armature.edit_bones[group.index].hide = True
+                armature.edit_bones[group.index].select = True
 
-            bpy.ops.object.mode_set(mode='POSE')
-            bpy.ops.pose.hide()
-            bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.object.mode_set(mode='POSE')
+                bpy.ops.pose.hide()
+                bpy.ops.object.mode_set(mode='EDIT')
 
     # corrects orientation
     correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
