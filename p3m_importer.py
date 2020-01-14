@@ -16,7 +16,7 @@ bl_info = {
     "author": "Gabriel F. (Synn)",
     "description": "Imports .p3m files into Blender, including meshes and bones.",
     "blender": (2, 80, 0),
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "location": "File > Import > Perfect 3D Model (.p3m)",
     "warning": "",
     "category": "Import-Export"
@@ -214,7 +214,17 @@ def import_p3m(context, filepath):
             
             mesh_object.vertex_groups[index].add([i], weight, "REPLACE")
 
-    
+    print("Hiding unused bones...")
+
+    for group in mesh_object.vertex_groups:
+        if not any([v for v in mesh.vertices if group.index in [g.group for g in v.groups]]):
+            armature.edit_bones[group.index].hide = True
+            armature.edit_bones[group.index].select = True
+
+            bpy.ops.object.mode_set(mode='POSE')
+            bpy.ops.pose.hide()
+            bpy.ops.object.mode_set(mode='EDIT')
+
     # corrects orientation
     correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
                                             [0.0, 0.0, 1.0, 0.0],
