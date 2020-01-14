@@ -216,15 +216,27 @@ def import_p3m(context, filepath):
 
     print("Hiding unused bones...")
 
-    for group in mesh_object.vertex_groups:
-        if not any([v for v in mesh.vertices if group.index in [g.group for g in v.groups]]):
-            if len(armature.edit_bones[group.index].children) == 0:
-                armature.edit_bones[group.index].hide = True
-                armature.edit_bones[group.index].select = True
+    for bone in armature.edit_bones:
+        if not bone.children:
+            for b in [bone, *bone.parent_recursive]:
+                bone_group = int(b.name.split('_')[-1])
 
-                bpy.ops.object.mode_set(mode='POSE')
-                bpy.ops.pose.hide()
-                bpy.ops.object.mode_set(mode='EDIT')
+                # if all the bone's children are hidden and there are no vertices influenced by the bone
+                if not False in [c.hide for c in b.children] and not any([v for v in mesh.vertices if bone_group in [g.group for g in v.groups]]):
+                    b.hide = True
+                else:
+                    break
+
+    for x in range(len(armature.edit_bones)):
+        bone = armature.edit_bones[x]
+        print(bone.name)
+
+        if bone.hide:
+            bone.select = True
+            
+            bpy.ops.object.mode_set(mode='POSE')
+            bpy.ops.pose.hide()
+            bpy.ops.object.mode_set(mode='EDIT')
 
     # corrects orientation
     correct_orientation = mathutils.Matrix([[-1.0, 0.0, 0.0, 0.0],
