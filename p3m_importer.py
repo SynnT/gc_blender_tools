@@ -230,7 +230,6 @@ def import_p3m(context, filepath, hide_unused_bones):
 
         for x in range(len(armature.edit_bones)):
             bone = armature.edit_bones[x]
-            print(bone.name)
 
             if bone.hide:
                 bone.select = True
